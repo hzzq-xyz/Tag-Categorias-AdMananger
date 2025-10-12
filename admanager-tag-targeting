@@ -1,0 +1,68 @@
+<?php
+/**
+ * Plugin Name:       Segmentação do Ad Manager por Taxonomias
+ * Plugin URI:        https://#
+ * Description:       Envia automaticamente as tags e categorias de cada post para o Google Ad Manager como segmentação personalizada (chave-valor).
+ * Version:           2.1
+ * Author:            Seu Nome
+ * Author URI:        https://hzzq.xyz
+ * License:           GPL v2 or later
+ * License URI:       https://www.gnu.org/licenses/gpl-2.0.html
+ * Text Domain:       admanager-taxonomy-targeting
+ */
+
+// Se este arquivo for chamado diretamente, aborte.
+if ( ! defined( 'WPINC' ) ) {
+	die;
+}
+
+/**
+ * Função principal que injeta os scripts de segmentação no <head> do site.
+ */
+function admanager_taxonomy_targeting_script() {
+
+    // Executar apenas em páginas de posts únicos.
+    if ( is_single() ) {
+
+        $targeting_scripts = '';
+
+        // --- LÓGICA PARA TAGS ---
+        $post_tags = get_the_tags();
+        if ( $post_tags ) {
+            $tags_array = array();
+            foreach ( $post_tags as $tag ) {
+                $tags_array[] = $tag->slug;
+            }
+            $js_tags_array = json_encode( $tags_array );
+            // ATUALIZADO: a chave agora é 'tags' (plural)
+            $targeting_scripts .= "googletag.pubads().setTargeting('tags', {$js_tags_array});\n";
+        }
+
+        // --- LÓGICA PARA CATEGORIAS ---
+        $post_categories = get_the_category();
+        if ( $post_categories ) {
+            $cats_array = array();
+            foreach ( $post_categories as $category ) {
+                $cats_array[] = $category->slug;
+            }
+            $js_cats_array = json_encode( $cats_array );
+            // ATUALIZADO: a chave agora é 'categorias' (plural)
+            $targeting_scripts .= "        googletag.pubads().setTargeting('categorias', {$js_cats_array});";
+        }
+
+        // Se houver algum script de segmentação para imprimir, continue.
+        if ( ! empty( $targeting_scripts ) ) {
+            echo <<<SCRIPT
+<script>
+    window.googletag = window.googletag || {cmd: []};
+    googletag.cmd.push(function() {
+        {$targeting_scripts}
+    });
+</script>
+SCRIPT;
+        }
+    }
+}
+
+// Adicionar nossa função ao hook 'wp_head' do WordPress.
+add_action( 'wp_head', 'admanager_taxonomy_targeting_script' );
