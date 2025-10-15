@@ -1,10 +1,10 @@
 <?php
 /**
- * Plugin Name:       Segmentação do Ad Manager por Taxonomias
- * Plugin URI:        https://#
- * Description:       Envia automaticamente as tags e categorias de cada post para o Google Ad Manager como segmentação personalizada (chave-valor).
- * Version:           2.1
- * Author:            Seu Nome
+ * Plugin Name:       Segmentação do Ad Manager por Taxonomias e Login
+ * Plugin URI:        https://github.com/hzzq-xyz/Tag-Categorias-AdMananger
+ * Description:       Envia automaticamente as tags, categorias e status de login do usuário para o Google Ad Manager como segmentação personalizada.
+ * Version:           2.2
+ * Author:            Gustavo Espindola Visentini
  * Author URI:        https://hzzq.xyz
  * License:           GPL v2 or later
  * License URI:       https://www.gnu.org/licenses/gpl-2.0.html
@@ -19,14 +19,27 @@ if ( ! defined( 'WPINC' ) ) {
 /**
  * Função principal que injeta os scripts de segmentação no <head> do site.
  */
-function admanager_taxonomy_targeting_script() {
+function admanager_custom_targeting_script() {
 
-    // Executar apenas em páginas de posts únicos.
+    $targeting_scripts = '';
+
+    // --- NOVA LÓGICA PARA STATUS DE LOGIN ---
+    // Esta verificação acontece em todas as páginas.
+    // A função is_user_logged_in() é nativa do WordPress.
+    if ( is_user_logged_in() ) {
+        $login_status = 'logado';
+    } else {
+        $login_status = 'visitante';
+    }
+    // Adiciona a linha de segmentação para o status de login.
+    $targeting_scripts .= "googletag.pubads().setTargeting('logado', '{$login_status}');\n";
+
+
+    // --- LÓGICA PARA TAGS E CATEGORIAS ---
+    // Esta verificação continua rodando apenas em páginas de posts.
     if ( is_single() ) {
 
-        $targeting_scripts = '';
-
-        // --- LÓGICA PARA TAGS ---
+        // Lógica para Tags
         $post_tags = get_the_tags();
         if ( $post_tags ) {
             $tags_array = array();
@@ -34,11 +47,10 @@ function admanager_taxonomy_targeting_script() {
                 $tags_array[] = $tag->slug;
             }
             $js_tags_array = json_encode( $tags_array );
-            // ATUALIZADO: a chave agora é 'tags' (plural)
-            $targeting_scripts .= "googletag.pubads().setTargeting('tags', {$js_tags_array});\n";
+            $targeting_scripts .= "        googletag.pubads().setTargeting('tags', {$js_tags_array});\n";
         }
 
-        // --- LÓGICA PARA CATEGORIAS ---
+        // Lógica para Categorias
         $post_categories = get_the_category();
         if ( $post_categories ) {
             $cats_array = array();
@@ -46,13 +58,13 @@ function admanager_taxonomy_targeting_script() {
                 $cats_array[] = $category->slug;
             }
             $js_cats_array = json_encode( $cats_array );
-            // ATUALIZADO: a chave agora é 'categorias' (plural)
             $targeting_scripts .= "        googletag.pubads().setTargeting('categorias', {$js_cats_array});";
         }
+    }
 
-        // Se houver algum script de segmentação para imprimir, continue.
-        if ( ! empty( $targeting_scripts ) ) {
-            echo <<<SCRIPT
+    // Se houver algum script de segmentação para imprimir, continue.
+    if ( ! empty( $targeting_scripts ) ) {
+        echo <<<SCRIPT
 <script>
     window.googletag = window.googletag || {cmd: []};
     googletag.cmd.push(function() {
@@ -60,9 +72,8 @@ function admanager_taxonomy_targeting_script() {
     });
 </script>
 SCRIPT;
-        }
     }
 }
 
-// Adicionar nossa função ao hook 'wp_head' do WordPress.
-add_action( 'wp_head', 'admanager_taxonomy_targeting_script' );
+// Renomeamos a função no add_action também
+add_action( 'wp_head', 'admanager_custom_targeting_script' );
