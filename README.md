@@ -16,3 +16,6 @@ No Google AdMananger vá em **Inventário > Chave-Valor**, então clique em **No
 
 ----
 15/10/2025 - Adicionado a opção de segmentação de Usuários **Logados** ou **Não Logados**
+
+----
+**HZZQ** - https://hzzq.xyz
