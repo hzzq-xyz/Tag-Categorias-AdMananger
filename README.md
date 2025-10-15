@@ -1,4 +1,4 @@
-# Tag-Categorias-AdMananger
+# Tag Categorias AdMananger
 Esse plugin, busca as tags de conteúdo e contegorias dentro do wordpress para que você possa usar como segmentação no Google AdMananger
 
 Ele foi criado usando o Google Gemini 2.5
